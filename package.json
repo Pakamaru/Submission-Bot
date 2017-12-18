@@ -1,0 +1,13 @@
+{
+  "name": "Nightcore submission bot",
+  "version": "0.0.1",
+  "description": "A discord dedicated bot for taking care of applications from members for the nightcore radio server and livestream.",
+  "main": "bot.js",
+  "author": "Amaru Signore <sanamaru99@gmail.com>",
+  "engines": {
+    "node": ">=8.0.0"
+  },
+  "dependencies": {
+    "discord.js": "^11.2.1"
+  }
+}
