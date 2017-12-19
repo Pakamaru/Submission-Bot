@@ -10,12 +10,20 @@ client.on("ready", () => {
 
 client.on("message", (message) => {
 
+//FOR TESTING PURPOSE ONLY!!!
+//DELETE THIS SECTION WHEN YOU ARE DONE WITH THE TESTING PHASE!!
+if(command === "reset"){
+  sql.run(`UPDATE submissions SET userId = null WHERE userId = ${message.author.id}`);
+}
+//
+//
+
   if(message.author.bot || message.content.indexOf(auth.prefix) !== 0) return ;
 
   const args = message.content.slice(auth.prefix.length).trim().split(/ +/g);
   const command = args.shift().toLowerCase();
   const commandArgs = args.join(' ');
-  var applied;
+  let applied;
 
   if(message.channel.type === "dm"){
     if(command === "start"){
@@ -88,7 +96,7 @@ client.on("message", (message) => {
 });
 
 function name(commandArgs, message) {
-  sql.run(`UPDATE submissions SET name = ${""+commandArgs} WHERE userId = ${message.author.id}`);
+  sql.run(`UPDATE submissions SET name = "${commandArgs}" WHERE userId = ${message.author.id}`);
   return message.channel.send("Value set.");
 }
 function age(commandArgs, message) {
@@ -96,31 +104,31 @@ function age(commandArgs, message) {
   return message.channel.send("Value set.");
 }
 function timezone(commandArgs, message) {
-  sql.run(`UPDATE submissions SET timezone = ${commandArgs} WHERE userId = ${message.author.id}`);
+  sql.run(`UPDATE submissions SET timezone = "${commandArgs}" WHERE userId = ${message.author.id}`);
   return message.channel.send("Value set.");
 }
 function place(commandArgs, message) {
-  sql.run(`UPDATE scosubmissionsres SET place = ${commandArgs} WHERE userId = ${message.author.id}`);
+  sql.run(`UPDATE scosubmissionsres SET place = "${commandArgs}" WHERE userId = ${message.author.id}`);
   return message.channel.send("Value set.");
 }
 function role(commandArgs, message) {
-  sql.run(`UPDATE submissions SET role = ${commandArgs} WHERE userId = ${message.author.id}`);
+  sql.run(`UPDATE submissions SET role = "${commandArgs}" WHERE userId = ${message.author.id}`);
   return message.channel.send("Value set.");
 }
 function gender(commandArgs, message) {
-  sql.run(`UPDATE submissions SET gender = ${commandArgs} WHERE userId = ${message.author.id}`);
+  sql.run(`UPDATE submissions SET gender = "${commandArgs}" WHERE userId = ${message.author.id}`);
   return message.channel.send("Value set.");
 }
 function activity(commandArgs, message) {
-  sql.run(`UPDATE submissions SET activity = ${commandArgs} WHERE userId = ${message.author.id}`);
+  sql.run(`UPDATE submissions SET activity = "${commandArgs}" WHERE userId = ${message.author.id}`);
   return message.channel.send("Value set.");
 }
 function info(commandArgs, message) {
-  sql.run(`UPDATE submissions SET info = ${commandArgs} WHERE userId = ${message.author.id}`);
+  sql.run(`UPDATE submissions SET info = "${commandArgs}" WHERE userId = ${message.author.id}`);
   return message.channel.send("Value set.");
 }
 function reason(commandArgs, message) {
-  sql.run(`UPDATE submissions SET reason = ${commandArgs} WHERE userId = ${message.author.id}`);
+  sql.run(`UPDATE submissions SET reason = "${commandArgs}" WHERE userId = ${message.author.id}`);
   return message.channel.send("Value set.");
 }
 
