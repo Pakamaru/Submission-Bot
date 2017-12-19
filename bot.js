@@ -10,42 +10,33 @@ client.on("ready", () => {
 
 client.on("message", (message) => {
 
-//FOR TESTING PURPOSE ONLY!!!
-//DELETE THIS SECTION WHEN YOU ARE DONE WITH THE TESTING PHASE!!
-if(command === "reset"){
-  sql.run(`UPDATE submissions SET userId = null WHERE userId = ${message.author.id}`);
-}
-//
-//
-
   if(message.author.bot || message.content.indexOf(auth.prefix) !== 0) return ;
 
   const args = message.content.slice(auth.prefix.length).trim().split(/ +/g);
   const command = args.shift().toLowerCase();
   const commandArgs = args.join(' ');
-  let applied;
+  var applied;
+
+  //FOR TESTING PURPOSE ONLY!!!
+  //DELETE THIS SECTION WHEN YOU ARE DONE WITH THE TESTING PHASE!!
+  if(command === "reset"){
+    sql.run(`UPDATE submissions SET userId = null WHERE userId = ${message.author.id}`);
+    return message.reply("Done");
+  }
+  //
+  //
 
   if(message.channel.type === "dm"){
+    sql.get(`SELECT applied FROM submissions WHERE userId ="${message.author.id}"`).then(row => {
+    if (!row) return message.reply("AN ERROR HAS OCCURED");
+    applied = row.applied;
+    });
     if(command === "start"){
-      sql.get(`SELECT * FROM submissions WHERE userId = "${message.author.id}"`).then(row => {
-        if(!row){
-          sql.run("INSERT INTO submissions (userId, applied, name, age, timezone, place, role, gender, activity, reason, info) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)", [message.author.id, "NULL"]);
-        } else {
-          return message.channel.send("Sorry, but you have already applied and we have not yet looked at your application.");
-        }
-        }).catch(() => {
-          console.error;
-          sql.run("CREATE TABLE IF NOT EXISTS submissions (userId TEXT PRIMARY KEY, applied TEXT, name TEXT, age INTEGER, timezone TEXT, place TEXT, role TEXT, gender TEXT, activity TEXT, reason TEXT, info TEXT)").then(() => {
-            sql.run("INSERT INTO submissions (userId, applied, name, age, timezone, place, role, gender, activity, reason, info) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)", [message.author.id, "NULL"]);
-          });
-        });
-      applied = sql.get(`SELECT applied FROM submissions WHERE userId ="${message.author.id}"`).then(row => {
-      if (!row) return message.reply("AN ERROR HAS OCCURED");
-      });
       const values = "#name #age #timezone #place #role #gender #activity #reason #info";
       return message.channel.send(values);
     }
     //TODO: turn applied on when you are done with the form!
+    console.log(applied);
     if(applied === null || applied === "" || applied == "NULL"){
       switch (command) {
         case "name":
@@ -82,7 +73,18 @@ if(command === "reset"){
   }
   else {
     if(command === "apply" || command === "submission"){
-      console.log("test");
+      sql.get(`SELECT * FROM submissions WHERE userId = "${message.author.id}"`).then(row => {
+        if(!row){
+          sql.run("INSERT INTO submissions (userId, applied, name, age, timezone, place, role, gender, activity, reason, info) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [message.author.id, "NULL"]);
+        } else {
+          return message.channel.send("Sorry, but you have already applied and we have not yet looked at your application.");
+        }
+      }).catch(() => {
+        console.error;
+        sql.run("CREATE TABLE IF NOT EXISTS submissions (userId TEXT PRIMARY KEY, applied TEXT, name TEXT, age INTEGER, timezone TEXT, place TEXT, role TEXT, gender TEXT, activity TEXT, reason TEXT, info TEXT)").then(() => {
+          sql.run("INSERT INTO submissions (userId, applied, name, age, timezone, place, role, gender, activity, reason, info) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [message.author.id, "NULL"]);
+        });
+      });
       return message.author.sendMessage("Hello "+message.author.username+"!"+
         "\nThanks for your interest in becoming moderator!"+
         "\nThere are a couple of steps to take before anyone can become a moderator."+
