@@ -1,13 +1,24 @@
 {
-  "name": "Nightcore submission bot",
-  "version": "0.0.1",
-  "description": "A discord dedicated bot for taking care of applications from members for the nightcore radio server and livestream.",
+  "name": "discord.js",
+  "version": "1.0.0",
+  "description": "\"# Submission-Bot\"",
   "main": "bot.js",
-  "author": "Amaru Signore <sanamaru99@gmail.com>",
-  "engines": {
-    "node": ">=8.0.0"
-  },
   "dependencies": {
-    "discord.js": "^11.2.1"
-  }
+    "discord.js": "^11.2.1",
+    "sqlite": "^2.9.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pakamaru/Submission-Bot.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Pakamaru/Submission-Bot/issues"
+  },
+  "homepage": "https://github.com/Pakamaru/Submission-Bot#readme"
 }
