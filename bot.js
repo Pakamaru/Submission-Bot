@@ -27,6 +27,26 @@ client.on("message", (message) => {
   //
 
   if(message.channel.type === "dm"){
+    if(command === "getlist"){
+      if(message.author.id == "140464114806947840" || message.author.id == "181749465089048576"){
+        fs.writeFileSync("./submission_folder/submission_list.txt", "");
+        sql.all(`SELECT * FROM submissions WHERE applied = 1`).then(row => {
+        if (!row) return message.reply(`AN ERROR HAS OCCURED!!\n${row}`);
+        else{
+        for(var i=0; i < row.length; i++){
+          var read = fs.readFileSync("./submission_folder/submission_list.txt", "utf8");
+          fs.writeFileSync("./submission_folder/submission_list.txt", read+
+          "THIS PART IS FOR THE USER: "+row[i].user+"\r\n"+
+          "Name: "+row[i].name+"\r\nAge: "+row[i].age+"\r\nTimezone: "+row[i].timezone+"\r\n"+
+          "Place: "+row[i].place+"\r\nRole: "+row[i].role+"\r\nGender: "+row[i].gender+"\r\n"+
+          "Activity: "+row[i].activity+"\r\nInfo: "+row[i].info+"\r\nReason: "+row[i].reason+"\r\n"+
+          "---------------------------------------------------------------------------------------\r\n\r\n");
+        }
+        message.channel.send({file: "./submission_folder/submission_list.txt"});//("./submission_folder/submission_list.txt", "attachment");
+      }
+        });
+      }
+    }
     sql.get(`SELECT * FROM submissions WHERE userId ="${message.author.id}"`).then(row => {
     if (!row) return message.reply("AN ERROR HAS OCCURED");
     let applied = row.applied;
@@ -59,7 +79,7 @@ client.on("message", (message) => {
         case "reason":
           reason(commandArgs, message);
         break;
-        case "done!":
+        case "done":
           finished(message);
         default:
           "Sorry, but that does not work here..."
@@ -84,27 +104,28 @@ client.on("message", (message) => {
                                   "\nI recieve: Value set."+
                                   "``````css"+
                                   "\n#name (full name) #age (in years) #timezone (for instance: UTC +1) #place (for instance: Amsterdam, The Netherlands) #role (YouTube/Discord) #gender (Male/Female/Other) #activity (the amount of hours you'll be active each week) #reason (your motivation) #info (any other additional information, this is not required)"+
-                                  "\nWhen you are done, type #done!"+
+                                  "\nWhen you are done, type #done"+
                                   "```");
     }
   }
   else {
     if(command === "apply" || command === "submission"){
+      var started = "false";
       sql.get(`SELECT * FROM submissions WHERE userId = "${message.author.id}"`).then(row => {
         if(!row){
-          sql.run("INSERT INTO submissions (userId, applied, name, age, timezone, place, role, gender, activity, reason, info) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [message.author.id, 0]);
+          sql.run("INSERT INTO submissions (userId, applied, name, age, timezone, place, role, gender, activity, reason, info, user) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [message.author.id, 0]);
           return message.author.send("```fix"+
-                                            "\nHello "+message.author.username+"!"+
-                                            "\nThanks for your interest in becoming moderator!"+
-                                            "``````"+
-                                            "\nThere are a couple of steps to take before anyone can become a moderator."+
-                                            "\nFirst there are some basic questions you’ll have to answer. If you make it through, one of our Head Moderators will have a 1 on 1 chat conversation with you to see if you’ll be suited as a moderator."+
-                                            "\n\nPlease note: we do not need moderators at all time."+
-                                            "\nThere is also no reason to feel sad if you don’t make it through."+
-                                            "\nYou can still have a great time chatting on YouTube and Discord!"+
-                                            "``````css"+
-                                            "\nTo start with the application please type #start"+
-                                            "```");
+                                    "\nHello "+message.author.username+"!"+
+                                    "\nThanks for your interest in becoming moderator!"+
+                                    "``````"+
+                                    "\nThere are a couple of steps to take before anyone can become a moderator."+
+                                    "\nFirst there are some basic questions you’ll have to answer. If you make it through, one of our Head Moderators will have a 1 on 1 chat conversation with you to see if you’ll be suited as a moderator."+
+                                    "\n\nPlease note: we do not need moderators at all time."+
+                                    "\nThere is also no reason to feel sad if you don’t make it through."+
+                                    "\nYou can still have a great time chatting on YouTube and Discord!"+
+                                    "``````css"+
+                                    "\nTo start with the application please type #start"+
+                                    "```");
         } else {
           return message.channel.send("```diff"+
                                       "\n- Sorry, but you have already applied for this application. You'll hear from us soon."+
@@ -113,23 +134,35 @@ client.on("message", (message) => {
         }
       }).catch(() => {
         console.error;
-        sql.run("CREATE TABLE IF NOT EXISTS submissions (userId TEXT PRIMARY KEY, applied INTEGER, name TEXT, age INTEGER, timezone TEXT, place TEXT, role TEXT, gender TEXT, activity TEXT, reason TEXT, info TEXT)").then(() => {
-          sql.run("INSERT INTO submissions (userId, applied, name, age, timezone, place, role, gender, activity, reason, info) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [message.author.id, 0]);
+        sql.run("CREATE TABLE IF NOT EXISTS submissions (userId TEXT PRIMARY KEY, applied INTEGER, name TEXT, age INTEGER, timezone TEXT, place TEXT, role TEXT, gender TEXT, activity TEXT, reason TEXT, info TEXT, user TEXT)").then(() => {
+          sql.run("INSERT INTO submissions (userId, applied, name, age, timezone, place, role, gender, activity, reason, info, user) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [message.author.id, 0]);
         });
+        return message.author.send("```fix"+
+                                  "\nHello "+message.author.username+"!"+
+                                  "\nThanks for your interest in becoming moderator!"+
+                                  "``````"+
+                                  "\nThere are a couple of steps to take before anyone can become a moderator."+
+                                  "\nFirst there are some basic questions you’ll have to answer. If you make it through, one of our Head Moderators will have a 1 on 1 chat conversation with you to see if you’ll be suited as a moderator."+
+                                  "\n\nPlease note: we do not need moderators at all time."+
+                                  "\nThere is also no reason to feel sad if you don’t make it through."+
+                                  "\nYou can still have a great time chatting on YouTube and Discord!"+
+                                  "``````css"+
+                                  "\nTo start with the application please type #start"+
+                                  "```");
       });
     }
   }
 });
-
 function finished(message){
-  sql.run(`UPDATE submissions SET applied = ${1} WHERE userId = ${message.author.id}`);
-  sql.get(`SELECT * FROM submissions WHERE userId ="${message.author.id}"`).then(row => {
-  if (!row) return message.reply("AN ERROR HAS OCCURED");
-  fs.writeFileSync("./submission_folder/"+message.author.username+message.author.id+".txt",
-  `Name: ${row.name}\r\nAge: ${row.age}\r\nTimezone: ${row.timezone}\r\n"+
-  "Place: ${row.place}\r\nRole: ${row.role}\r\nGender: ${row.gender}\r\n"+
-  "Activity: ${row.activity}\r\nInfo: ${row.info}\r\nReason: ${row.reason}`);
-  return message.channel.send("Thank you for your application!\nYou will hear from a head moderator soon.")
+  sql.get(`SELECT * FROM submissions WHERE userId = ${message.author.id} AND age IS NOT NULL AND timezone IS NOT NULL AND place IS NOT NULL AND role IS NOT NULL AND gender IS NOT NULL AND activity IS NOT NULL AND reason IS NOT NULL AND info IS NOT NULL`).then(row => {
+    if (!row) return message.reply("Please fill in all information");
+    else{
+      if(row.age >= 14){
+        sql.run(`UPDATE submissions SET applied = ${1}, user = "${message.author.tag}" WHERE userId = ${message.author.id}`);
+        return message.channel.send("Thank you for your application!"+
+        "/nYou will hear from a Head Moderator soon.");
+      } else return message.channel.send("You do not meet our requirements, try again later.");
+    }
   });
 }
 function name(commandArgs, message) {
