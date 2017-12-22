@@ -3,6 +3,7 @@ const client = new Discord.Client();
 const sql = require("sqlite");
 const fs = require('fs');
 const auth = require("./auth.json");
+const list = './submission_folder/submission_list.md';
 sql.open("./submissions.sqlite");
 
 client.on("ready", () => {
@@ -16,6 +17,7 @@ client.on("message", (message) => {
   const args = message.content.slice(auth.prefix.length).trim().split(/ +/g);
   const command = args.shift().toLowerCase();
   const commandArgs = args.join(' ');
+  const on = "false"; //use "" to turn it on and use "false" to turn it off
 
   //FOR TESTING PURPOSE ONLY!!!
   //DELETE THIS SECTION WHEN YOU ARE DONE WITH THE TESTING PHASE!!
@@ -26,27 +28,37 @@ client.on("message", (message) => {
   //
   //
 
-  if(message.channel.type === "dm"){
+
+  if(message.author.id == "140464114806947840" || message.author.id == "181749465089048576"){
     if(command === "getlist"){
-      if(message.author.id == "140464114806947840" || message.author.id == "181749465089048576"){
-        fs.writeFileSync("./submission_folder/submission_list.txt", "");
-        sql.all(`SELECT * FROM submissions WHERE applied = 1`).then(row => {
+      fs.writeFileSync(list, "");
+      sql.all(`SELECT * FROM submissions WHERE applied = 1`).then(row => {
         if (!row) return message.reply(`AN ERROR HAS OCCURED!!\n${row}`);
         else{
         for(var i=0; i < row.length; i++){
-          var read = fs.readFileSync("./submission_folder/submission_list.txt", "utf8");
-          fs.writeFileSync("./submission_folder/submission_list.txt", read+
+          var read = fs.readFileSync(list, "utf8");
+          fs.writeFileSync(list, read+
           "THIS PART IS FOR THE USER: "+row[i].user+"\r\n"+
           "Name: "+row[i].name+"\r\nAge: "+row[i].age+"\r\nTimezone: "+row[i].timezone+"\r\n"+
           "Place: "+row[i].place+"\r\nRole: "+row[i].role+"\r\nGender: "+row[i].gender+"\r\n"+
           "Activity: "+row[i].activity+"\r\nInfo: "+row[i].info+"\r\nReason: "+row[i].reason+"\r\n"+
           "---------------------------------------------------------------------------------------\r\n\r\n");
         }
-        message.channel.send({file: "./submission_folder/submission_list.txt"});//("./submission_folder/submission_list.txt", "attachment");
-      }
-        });
-      }
+          message.channel.send({file: list});//(list, "attachment");
+        }
+      });
     }
+    if(command === "delete"){
+      sql.run(`DELETE FROM submissions WHERE userId = (?)`, commandArgs, function(err){
+        return message.reply("User has been deleted!");
+      });
+    }
+  }
+  if(on === "false") return message.reply("We do not need any moderators right now.");
+
+
+
+  if(message.channel.type === "dm"){
     sql.get(`SELECT * FROM submissions WHERE userId ="${message.author.id}"`).then(row => {
     if (!row) return message.reply("AN ERROR HAS OCCURED");
     let applied = row.applied;
@@ -134,7 +146,7 @@ client.on("message", (message) => {
         }
       }).catch(() => {
         console.error;
-        sql.run("CREATE TABLE IF NOT EXISTS submissions (userId TEXT PRIMARY KEY, applied INTEGER, name TEXT, age INTEGER, timezone TEXT, place TEXT, role TEXT, gender TEXT, activity TEXT, reason TEXT, info TEXT, user TEXT)").then(() => {
+        sql.run("CREATE TABLE IF NOT EXISTS submissions (userId INTEGER PRIMARY KEY, applied INTEGER, name TEXT, age INTEGER, timezone TEXT, place TEXT, role TEXT, gender TEXT, activity TEXT, reason TEXT, info TEXT, user TEXT)").then(() => {
           sql.run("INSERT INTO submissions (userId, applied, name, age, timezone, place, role, gender, activity, reason, info, user) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [message.author.id, 0]);
         });
         return message.author.send("```fix"+
