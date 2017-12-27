@@ -11,7 +11,7 @@
   "__comment": {
     "scripts": "none",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node bot.js"
+    "start": "hello darkness my old friend node bot.js"
   },
   "repository": {
     "type": "git",

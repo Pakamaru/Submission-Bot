@@ -4,6 +4,7 @@ const sql = require("sqlite");
 const fs = require('fs');
 const auth = require("./auth.json");
 const list = './submission_folder/submission_list.md';
+const config = './submission_folder/submission_config.md';
 sql.open("./submissions.sqlite");
 
 client.on("ready", () => {
@@ -17,20 +18,11 @@ client.on("message", (message) => {
   const args = message.content.slice(auth.prefix.length).trim().split(/ +/g);
   const command = args.shift().toLowerCase();
   const commandArgs = args.join(' ');
-  const on = "false"; //use "" to turn it on and use "false" to turn it off
-
-  //FOR TESTING PURPOSE ONLY!!!
-  //DELETE THIS SECTION WHEN YOU ARE DONE WITH THE TESTING PHASE!!
-  if(command === "reset"){
-    sql.run(`UPDATE submissions SET userId = null WHERE userId = ${message.author.id}`);
-    return message.reply("Done");
-  }
-  //
-  //
+  const bot = fs.readFileSync(config, "utf8"); //use "true" to turn it on and use "false" to turn it off
 
 
   if(message.author.id == "140464114806947840" || message.author.id == "181749465089048576"){
-    if(command === "getlist"){
+    if(command === "list"){
       fs.writeFileSync(list, "");
       sql.all(`SELECT * FROM submissions WHERE applied = 1`).then(row => {
         if (!row) return message.reply(`AN ERROR HAS OCCURED!!\n${row}`);
@@ -39,6 +31,7 @@ client.on("message", (message) => {
           var read = fs.readFileSync(list, "utf8");
           fs.writeFileSync(list, read+
           "THIS PART IS FOR THE USER: "+row[i].user+"\r\n"+
+          "UserID: "+row[i].userId+"\r\nApplied at: Date: "+row[i].createdDateAt+" (YYYY-MM-DD) - Time: "+row[i].createdTimeAt+" (+1 GMT)\r\n"+
           "Name: "+row[i].name+"\r\nAge: "+row[i].age+"\r\nTimezone: "+row[i].timezone+"\r\n"+
           "Place: "+row[i].place+"\r\nRole: "+row[i].role+"\r\nGender: "+row[i].gender+"\r\n"+
           "Activity: "+row[i].activity+"\r\nInfo: "+row[i].info+"\r\nReason: "+row[i].reason+"\r\n"+
@@ -50,11 +43,20 @@ client.on("message", (message) => {
     }
     if(command === "delete"){
       sql.run(`DELETE FROM submissions WHERE userId = (?)`, commandArgs, function(err){
-        return message.reply("User has been deleted!");
+        return message.channel.send("AN ERROR HAS OCCURED!");
       });
+      return message.channel.send("User has been deleted!");
+    }
+    if(command === "toggle"){
+      if(bot === "false"){
+        fs.writeFileSync(config, "true");
+      } else {
+        fs.writeFileSync(config, "false");
+      }
+      return message.channel.send("The bot status has been set to "+fs.readFileSync(config, "utf8"));
     }
   }
-  if(on === "false") return message.reply("We do not need any moderators right now.");
+  if(bot === "false") return message.reply("We do not need any moderators right now.");
 
 
 
@@ -62,7 +64,7 @@ client.on("message", (message) => {
     sql.get(`SELECT * FROM submissions WHERE userId ="${message.author.id}"`).then(row => {
     if (!row) return message.reply("AN ERROR HAS OCCURED");
     let applied = row.applied;
-    if(applied === 0){
+    if(applied === 0 && commandArgs.trim() !== ""){
       switch (command) {
         case "name":
           name(commandArgs, message);
@@ -93,6 +95,7 @@ client.on("message", (message) => {
         break;
         case "done":
           finished(message);
+        break;
         default:
           "Sorry, but that does not work here..."
       }
@@ -101,9 +104,9 @@ client.on("message", (message) => {
                                   "\n- Sorry, but you have already applied for this application. You'll hear from us soon."+
                                   "\nIf you don't hear from us in one week, please send a direct message to one of our Head Moderators."+
                                   "```");
-    }
-    });
-    if(command === "start"){
+    } else if (command === "done"){
+      finished(message);
+    } else if (command === "start"){
       return message.channel.send("```fix"+
                                   "\nWelcome to the moderator application!"+
                                   "\nThis is the application anyone has to pass before it's possible to become moderator."+
@@ -115,17 +118,20 @@ client.on("message", (message) => {
                                   "\nI type: #timezone UTC -5"+
                                   "\nI recieve: Value set."+
                                   "``````css"+
-                                  "\n#name (full name) #age (in years) #timezone (for instance: UTC +1) #place (for instance: Amsterdam, The Netherlands) #role (YouTube/Discord) #gender (Male/Female/Other) #activity (the amount of hours you'll be active each week) #reason (your motivation) #info (any other additional information, this is not required)"+
+                                  "\n#name (full name is optional) #age (in years) #timezone (for instance: UTC +1) #place (for instance: Amsterdam, The Netherlands) #role (YouTube/Discord) #gender (Male/Female/Other) #activity (the amount of hours you'll be active each week) #reason (your motivation) #info (any other additional information, this is not required)"+
                                   "\nWhen you are done, type #done"+
                                   "```");
-    }
+      } else if (commandArgs.trim() === ""){
+        return message.channel.send("Please enter a valid value.");
+      }
+    });
   }
   else {
     if(command === "apply" || command === "submission"){
       var started = "false";
       sql.get(`SELECT * FROM submissions WHERE userId = "${message.author.id}"`).then(row => {
         if(!row){
-          sql.run("INSERT INTO submissions (userId, applied, name, age, timezone, place, role, gender, activity, reason, info, user) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [message.author.id, 0]);
+          sql.run("INSERT INTO submissions (userId, applied, name, age, timezone, place, role, gender, activity, reason, info, user, createdDateAt, createdTimeAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [message.author.id, 0]);
           return message.author.send("```fix"+
                                     "\nHello "+message.author.username+"!"+
                                     "\nThanks for your interest in becoming moderator!"+
@@ -146,8 +152,8 @@ client.on("message", (message) => {
         }
       }).catch(() => {
         console.error;
-        sql.run("CREATE TABLE IF NOT EXISTS submissions (userId INTEGER PRIMARY KEY, applied INTEGER, name TEXT, age INTEGER, timezone TEXT, place TEXT, role TEXT, gender TEXT, activity TEXT, reason TEXT, info TEXT, user TEXT)").then(() => {
-          sql.run("INSERT INTO submissions (userId, applied, name, age, timezone, place, role, gender, activity, reason, info, user) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [message.author.id, 0]);
+        sql.run("CREATE TABLE IF NOT EXISTS submissions (userId INTEGER PRIMARY KEY, applied INTEGER, name TEXT, age INTEGER, timezone TEXT, place TEXT, role TEXT, gender TEXT, activity TEXT, reason TEXT, info TEXT, user TEXT, createdDateAt DATE, createdTimeAt)").then(() => {
+          sql.run("INSERT INTO submissions (userId, applied, name, age, timezone, place, role, gender, activity, reason, info, user, createdDateAt, createdTimeAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [message.author.id, 0]);
         });
         return message.author.send("```fix"+
                                   "\nHello "+message.author.username+"!"+
@@ -166,13 +172,13 @@ client.on("message", (message) => {
   }
 });
 function finished(message){
-  sql.get(`SELECT * FROM submissions WHERE userId = ${message.author.id} AND age IS NOT NULL AND timezone IS NOT NULL AND place IS NOT NULL AND role IS NOT NULL AND gender IS NOT NULL AND activity IS NOT NULL AND reason IS NOT NULL AND info IS NOT NULL`).then(row => {
-    if (!row) return message.reply("Please fill in all information");
+  sql.get(`SELECT * FROM submissions WHERE userId = ${message.author.id} AND name IS NOT NULL AND age IS NOT NULL AND timezone IS NOT NULL AND place IS NOT NULL AND role IS NOT NULL AND gender IS NOT NULL AND activity IS NOT NULL AND reason IS NOT NULL AND info IS NOT NULL`).then(row => {
+    if (!row) return message.reply("Please fill in all information.");
     else{
       if(row.age >= 14){
-        sql.run(`UPDATE submissions SET applied = ${1}, user = "${message.author.tag}" WHERE userId = ${message.author.id}`);
+        sql.run(`UPDATE submissions SET applied = ${1}, user = "${message.author.tag}", createdDateAt = date(), createdTimeAt = time() WHERE userId = ${message.author.id}`);
         return message.channel.send("Thank you for your application!"+
-        "/nYou will hear from a Head Moderator soon.");
+        "\nYou will hear from a Head Moderator soon.");
       } else return message.channel.send("You do not meet our requirements, try again later.");
     }
   });
