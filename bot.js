@@ -22,6 +22,9 @@ client.on("message", (message) => {
 
 
   if(message.author.id == "140464114806947840" || message.author.id == "181749465089048576"){
+    if(command === "help"){
+      return message.channel.send("#apply, #list, #delete [user], toggle");
+    }
     if(command === "list"){
       fs.writeFileSync(list, "");
       sql.all(`SELECT * FROM submissions WHERE applied = 1`).then(row => {
@@ -31,7 +34,7 @@ client.on("message", (message) => {
           var read = fs.readFileSync(list, "utf8");
           fs.writeFileSync(list, read+
           "THIS PART IS FOR THE USER: "+row[i].user+"\r\n"+
-          "UserID: "+row[i].userId+"\r\nApplied at: Date: "+row[i].createdDateAt+" (YYYY-MM-DD) - Time: "+row[i].createdTimeAt+" (+1 GMT)\r\n"+
+          "UserID: "+row[i].userId+"\r\nApplied at: Date: "+row[i].createdDateAt+" (YYYY-MM-DD) - Time: "+row[i].createdTimeAt+" (GMT)\r\n"+
           "Name: "+row[i].name+"\r\nAge: "+row[i].age+"\r\nTimezone: "+row[i].timezone+"\r\n"+
           "Place: "+row[i].place+"\r\nRole: "+row[i].role+"\r\nGender: "+row[i].gender+"\r\n"+
           "Activity: "+row[i].activity+"\r\nInfo: "+row[i].info+"\r\nReason: "+row[i].reason+"\r\n"+
@@ -62,7 +65,7 @@ client.on("message", (message) => {
 
   if(message.channel.type === "dm"){
     sql.get(`SELECT * FROM submissions WHERE userId ="${message.author.id}"`).then(row => {
-    if (!row) return message.reply("AN ERROR HAS OCCURED");
+    if (!row) return message.reply("Please type #apply in the server first!");
     let applied = row.applied;
     if(applied === 0 && commandArgs.trim() !== ""){
       switch (command) {
